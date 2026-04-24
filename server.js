@@ -1,10 +1,13 @@
 const http = require("node:http");
 
-// Initialize the server instance
-const server = http.createServer((req, res) => {
-  
+const routes = {
+  // Route: GET / - main home page
+  "GET /": (req, res) => {
+    res.writeHead(200, "{'content-type' = 'text/plain'}");
+    res.end("Hello From Server!");
+  },
   // Route: POST /data - Handles incoming JSON payloads
-  if (req.url === "/data" && req.method === "POST") {
+  "POST /": (req, res) => {
     let chunks = [];
 
     // Listen for incoming data stream 'chunks'
@@ -31,26 +34,28 @@ const server = http.createServer((req, res) => {
         res.writeHead(200, { "Content-Type": "application/json" });
         parsed.message = "Data received";
         res.end(JSON.stringify(parsed));
-
       } catch (err) {
-        // Handle bad JSON 
+        // Handle bad JSON
         res.writeHead(400, { "Content-Type": "text/plain" });
         res.end("Wrong JSON Format");
       }
     });
-
-  // Route: GET / - main home page
-  } else if (req.url === "/" && req.method === "GET") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("Hello World");
-
+  },
   // Route: GET /api - Returns a JSON object
-  } else if (req.url === "/api" && req.method === "GET") {
+  "GET /api": (req, res) => {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(JSON.stringify({ status: "good", message: "Hello From Server" }));
+  },
+};
 
-  // Fallback: 404 Not Found
-  } else {
+// Initialize the server instance
+const server = http.createServer((req, res) => {
+  const key = `${req.method} ${req.url}`;
+  const handler = routes[key];
+
+  if (handler) {
+    handler (req, res);
+  }else{
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("There is nothing here");
   }
