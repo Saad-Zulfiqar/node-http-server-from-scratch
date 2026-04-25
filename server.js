@@ -4,7 +4,7 @@ const routes = {
   // Route: GET / - main home page
   "GET /": homeHandler,
   // Route: POST /data - Handles incoming JSON payloads
-  "POST /": postHandler,
+  "POST /data": postHandler,
   // Route: GET /api - Returns a JSON object
   "GET /api": apiHandler,
 };
@@ -15,9 +15,9 @@ const server = http.createServer((req, res) => {
   if (next) next(req);
 
   //get clean url path after parsing
-  const pathName = parseURL(req); 
+  const path = parseURL(req); 
 
-  const key = `${req.method} ${pathName}`;
+  const key = `${req.method} ${path}`;
   const handler = routes[key];
 
   if (handler) {
@@ -35,7 +35,7 @@ server.listen(3000, () => {
 
 //route handler function implementations
 function homeHandler(req, res) {
-  res.writeHead(200, "{'content-type' = 'text/plain'}");
+  res.writeHead(200, "{'content-type' : 'text/plain'}");
   res.end("Hello From Server!");
 }
 
@@ -81,16 +81,12 @@ function apiHandler(req, res) {
 
 // middleware function
 function logger(req) {
-  console.log(`${req.method} ${req.url}`);
-  return (req) =>
-    console.log(
-      `I am the next middleware, the previos middleware gave me ${req.method}`,
-    );
+  console.log(`Logged : ${req.method} ${req.url}`);
 }
 
 function parseURL(req) {
   const protocol = req.socket.encrypted ? "https" : "http";
-  const baseURL = `protocol://${req.headers.host}`;
+  const baseURL = `${protocol}://${req.headers.host}`;
 
   //to extract pathname witout querys (quereys are dumped here) and to lower case path
   const parsedUrl = new URL(req.url, baseURL);
