@@ -11,7 +11,13 @@ const routes = {
 
 // Initialize the server instance
 const server = http.createServer((req, res) => {
-  const key = `${req.method} ${req.url}`;
+  let next = logger(req);
+  if (next) next(req);
+
+  //get clean url path after parsing
+  const pathName = parseURL(req); 
+
+  const key = `${req.method} ${pathName}`;
   const handler = routes[key];
 
   if (handler) {
@@ -71,4 +77,25 @@ function postHandler(req, res) {
 function apiHandler(req, res) {
   res.writeHead(200, { "Content-Type": "application/json" });
   res.end(JSON.stringify({ status: "good", message: "Hello From Server" }));
+}
+
+// middleware function
+function logger(req) {
+  console.log(`${req.method} ${req.url}`);
+  return (req) =>
+    console.log(
+      `I am the next middleware, the previos middleware gave me ${req.method}`,
+    );
+}
+
+function parseURL(req) {
+  const protocol = req.socket.encrypted ? "https" : "http";
+  const baseURL = `protocol://${req.headers.host}`;
+
+  //to extract pathname witout querys (quereys are dumped here) and to lower case path
+  const parsedUrl = new URL(req.url, baseURL);
+  //cleaning trailing '/' and lowering the case
+  const pathName = parsedUrl.pathname.toLowerCase().replace(/\/+$/, "") || "/";
+
+  return pathName;
 }
